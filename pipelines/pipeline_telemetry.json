@@ -1,0 +1,7 @@
+{
+  "description": "Telemetry pipeline for drone data",
+  "processors": [
+    { "json": { "field": "msg", "add_to_root": true, "ignore_failure": true } },
+    { "rename": { "field": "msg", "target_field": "raw_msg", "ignore_failure": true } }
+  ]
+}

@@ -1,0 +1,8 @@
+# MQTT anomalous length
+alert mqtt any any -> any any (msg:"MQTT anomalous length"; mqtt.len > 1024; sid:900001; rev:1;)
+# MQTT unknown client-id (prefix not drone-)
+alert mqtt any any -> any any (msg:"MQTT unknown client-id"; mqtt.client_id; content:!"drone-"; sid:900002; rev:1;)
+# MAVLink CMD_LONG replay spike (msgid 76)
+alert tcp any any -> any 14550 (msg:"MAVLink CMD_LONG replay"; flow:to_server; content:"\x4c"; offset:5; depth:1; detection_filter:track by_dst, count 5, seconds 1; sid:900010; rev:1;)
+# RTSP large outbound stream (potential leak)
+alert tcp any any -> any 554 (msg:"RTSP outbound high rate"; flow:to_client; dsize:>1500; threshold: type both, track by_src, count 20, seconds 10; sid:900020; rev:1;)

@@ -1,0 +1,125 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+    volumes:
+      - ./mosquitto/conf:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    networks: [edge]
+
+  suricata:
+    image: jasonish/suricata:7.0.5
+    command: ["suricata","-i","eth0","-c","/etc/suricata/suricata.yaml"]
+    volumes:
+      - ./suricata/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./suricata/custom.rules:/var/lib/suricata/rules/custom.rules:ro
+      - suricata-logs:/var/log/suricata
+    depends_on: [mosquitto]
+    networks: [edge]
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    volumes:
+      - ./data/es:/usr/share/elasticsearch/data
+      - ./pipelines:/usr/share/elasticsearch/pipelines
+    ports:
+      - "9200:9200"
+    networks: [core]
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.13.4
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - suricata-logs:/var/log/suricata:ro
+    depends_on: [elasticsearch, mosquitto, suricata]
+    networks: [edge, core]
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.4
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on: [elasticsearch]
+    networks: [core]
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=security
+      - POSTGRES_USER=security
+      - POSTGRES_PASSWORD=security
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    networks: [core]
+
+  fastapi:
+    build: ./fastapi
+    ports:
+      - "8000:8000"
+    depends_on: [postgres]
+    networks: [core, edge]
+
+  wazuh-manager:
+    image: wazuh/wazuh-manager:4.8.0
+    environment:
+      - INDEXER_URL=http://elasticsearch:9200
+    depends_on: [elasticsearch]
+    networks: [core]
+
+  thehive:
+    image: strangebee/thehive:5.2.3-1
+    environment:
+      - DATABASE_NAME=thehive
+      - DATABASE_HOST=postgres
+      - DATABASE_USERNAME=security
+      - DATABASE_PASSWORD=security
+      - ES_URL=http://elasticsearch:9200
+    ports:
+      - "9000:9000"
+    depends_on: [elasticsearch, postgres]
+    networks: [core]
+
+  cortex:
+    image: thehiveproject/cortex:3.1.7-1
+    environment:
+      - JOB_DIRECTORY=/var/run/cortex/jobs
+    ports:
+      - "9001:9001"
+    networks: [core]
+    depends_on: [thehive]
+
+  telegraf:
+    image: telegraf:1.30
+    depends_on:
+      - mosquitto
+      - elasticsearch
+    volumes:
+      - ./telegraf:/etc/telegraf:ro
+      - ./mosquitto/conf:/certs:ro
+    networks:
+      - edge
+      - core
+
+  load-pipelines:
+    image: curlimages/curl:7.85.0
+    depends_on:
+      - elasticsearch
+    entrypoint: ["/bin/sh", "/pipelines/load.sh"]
+    volumes:
+      - ./pipelines:/pipelines
+    networks: [core]
+
+networks:
+  edge:
+  core:
+
+volumes:
+  suricata-logs:

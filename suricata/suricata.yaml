@@ -1,0 +1,23 @@
+%YAML 1.1
+---
+vars:
+  address-groups:
+    HOME_NET: ["any"]
+  port-groups:
+    MQTT_PORTS: [1883,8883]
+    MAVLINK_PORTS: [14550,14551]
+    RTSP_PORTS: [554]
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /var/log/suricata/eve.json
+      types: [alert, dns, http, tls, mqtt, stats]
+rule-files:
+  - custom.rules
+logging:
+  default-log-level: info
+  outputs:
+    - console:
+        enabled: yes
+        type: json

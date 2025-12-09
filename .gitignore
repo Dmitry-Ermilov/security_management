@@ -1,0 +1,28 @@
+# Virtualenvs and tooling
+.venv/
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+
+# Docker data / logs
+data/
+db/
+suricata-logs/
+pcap/
+mosquitto/data/
+mosquitto/log/
+mosquitto/conf/*
+
+# Mosquitto secrets
+mosquitto/conf/passwd
+mosquitto/conf/*.key
+mosquitto/conf/*.srl
+mosquitto/conf/*.csr
+mosquitto/conf/acl
+
+# Certificates/keys you don’t plan to publish (comment out if needed)
+# mosquitto/conf/*.crt
+
+# Misc
+*.log
