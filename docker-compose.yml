@@ -98,12 +98,13 @@ services:
 
   telegraf:
     image: telegraf:1.30
+    user: "0:0"
     depends_on:
       - mosquitto
       - elasticsearch
     volumes:
       - ./telegraf:/etc/telegraf:ro
-      - ./mosquitto/conf:/certs:ro
+      - ./telegraf/certs:/certs:ro
     networks:
       - edge
       - core
