@@ -10,6 +10,12 @@ import paho.mqtt.client as mqtt
 BROKER = "127.0.0.1"
 PORT = 8883
 
+# Используем читаемые копии сертификатов
+TLS_CA = "telegraf/certs/ca.crt"
+TLS_CERT = "telegraf/certs/client.crt"
+TLS_KEY = "telegraf/certs/client.key"
+TLS_INSECURE = True  # оставить True, если нет SAN в сертификате
+
 TOPIC_TELEMETRY = "telemetry/drone/status"
 TOPIC_COMMAND = "command/drone/status"
 TOPIC_EVENT = "event/drone/status"
@@ -63,13 +69,15 @@ def event_payload() -> dict:
 def main() -> None:
     client = mqtt.Client()
 
-    # правильный путь для запуска извне контейнера
+    # TLS для подключения к mosquitto (localhost:8883)
     client.tls_set(
-        ca_certs="mosquitto/conf/ca.crt",
-        certfile="mosquitto/conf/client.crt",
-        keyfile="mosquitto/conf/client.key",
+        ca_certs=TLS_CA,
+        certfile=TLS_CERT,
+        keyfile=TLS_KEY,
         tls_version=ssl.PROTOCOL_TLS,
     )
+    if TLS_INSECURE:
+        client.tls_insecure_set(True)
 
     client.connect(BROKER, PORT, 60)
 
