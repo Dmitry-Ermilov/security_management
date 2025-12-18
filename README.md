@@ -2,10 +2,20 @@
 
 ## Запуск
 ```bash
-cd /home/dmitry/Документы/project_VC/security_management
+cd /path/to/security_management
 sg docker -c "docker compose up -d"
 ```
 Базовые сервисы: mosquitto, telegraf, elasticsearch, kibana, logstash (TheHive/Cortex/Wazuh при необходимости стартуются отдельно).
+
+## Документация проекта
+- Отчет и обоснование: `REPORT.md`
+- Пилот и запуск: `README_PILOT.md`
+
+## Подготовка MQTT (TLS/ACL)
+1. Сгенерировать сертификаты (примерный скрипт): `scripts/gen_mqtt_certs.sh`.
+2. Сформировать парольный файл (примерный скрипт): `scripts/gen_mosquitto_passwd.sh`.
+3. Убедиться, что `mosquitto/conf/` содержит `ca.crt`, `server.crt`, `server.key`, `passwd`, `acl`.
+4. По умолчанию используются `operator/operator123` (обновить в `mosquitto/conf/passwd`, `telegraf/telegraf.conf`, `simulate_telemetry.py` при смене).
 
 ## Генерация данных MQTT
 ```bash
@@ -13,6 +23,18 @@ source .venv/bin/activate
 python simulate_telemetry.py
 ```
 Скрипт шлёт telemetry/command/event в Mosquitto (TLS 8883), Telegraf раскладывает по индексам `telemetry-*`, `command-*`, `mqtt-*`.
+
+## Политики и алерты (FastAPI)
+Пример политики и обработки алерта:
+```bash
+curl -X POST http://localhost:8000/policies \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"high-severity","conditions":{"severity_gte":7},"actions":{"type":"rth","params":{"mode":"RTL"}}}'
+
+curl -X POST http://localhost:8000/alerts/process \
+  -H 'Content-Type: application/json' \
+  -d '{"source":"suricata","rule_id":"900001","severity":8,"data":{"msg":"MQTT anomalous length"}}'
+```
 
 ## Просмотр в Kibana
 Открой `http://localhost:5601`, выбери Dashboard (MQTT ingest) или Discover:

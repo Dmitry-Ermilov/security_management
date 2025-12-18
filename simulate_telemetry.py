@@ -16,6 +16,10 @@ TLS_CERT = "telegraf/certs/client.crt"
 TLS_KEY = "telegraf/certs/client.key"
 TLS_INSECURE = True  # оставить True, если нет SAN в сертификате
 
+MQTT_USERNAME = "operator"
+MQTT_PASSWORD = "operator123"
+CLIENT_ID = "drone-001"
+
 TOPIC_TELEMETRY = "telemetry/drone/status"
 TOPIC_COMMAND = "command/drone/status"
 TOPIC_EVENT = "event/drone/status"
@@ -67,7 +71,8 @@ def event_payload() -> dict:
     }
 
 def main() -> None:
-    client = mqtt.Client()
+    client = mqtt.Client(client_id=CLIENT_ID)
+    client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 
     # TLS для подключения к mosquitto (localhost:8883)
     client.tls_set(

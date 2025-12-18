@@ -9,15 +9,18 @@
 - thehive + cortex — кейсы/плейбуки (минимум конфигурации)
 
 ## Быстрый старт
-1. Сгенерируй CA и certs (server/client) для mosquitto, сервисов, и положи в `mosquitto/conf` (ca.crt, server.crt, server.key, password/acl файлы). Пример ACL уже есть.
-2. (Опц) поправь `suricata/custom.rules` и `logstash/logstash.conf` под свои адреса/топики.
-3. Запусти: `docker compose up -d`.
-4. Проверь доступность:
+1. Сгенерируй CA и certs (server/client) для mosquitto и сервисов: `scripts/gen_mqtt_certs.sh`.
+2. Сгенерируй парольный файл: `scripts/gen_mosquitto_passwd.sh`.
+3. Проверь `mosquitto/conf` (ca.crt, server.crt, server.key, passwd, acl). Пример ACL уже есть.
+4. По умолчанию логин/пароль: `operator/operator123` (согласовать с `telegraf/telegraf.conf` и `simulate_telemetry.py`).
+5. (Опц) поправь `suricata/custom.rules` и `logstash/logstash.conf` под свои адреса/топики.
+6. Запусти: `docker compose up -d`.
+7. Проверь доступность:
    - Kibana: http://localhost:5601
    - Elasticsearch: http://localhost:9200
    - FastAPI: http://localhost:8000/health
    - TheHive: http://localhost:9000
-5. Отправь тестовые MQTT сообщения (TLS) и убедись, что Suricata/Logstash кладут события в ES.
+8. Отправь тестовые MQTT сообщения (TLS) и убедись, что Suricata/Logstash кладут события в ES.
 
 ## Тесты
 - pcap/replay MQTT/MAVLink → Suricata alert → проверка в ES/Kibana.

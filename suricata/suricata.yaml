@@ -2,7 +2,7 @@
 ---
 vars:
   address-groups:
-    HOME_NET: ["any"]
+    HOME_NET: "any"
   port-groups:
     MQTT_PORTS: [1883,8883]
     MAVLINK_PORTS: [14550,14551]

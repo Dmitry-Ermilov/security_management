@@ -45,6 +45,8 @@ services:
     image: docker.elastic.co/kibana/kibana:8.13.4
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
     ports:
       - "5601:5601"
     depends_on: [elasticsearch]
@@ -64,6 +66,8 @@ services:
     build: ./fastapi
     ports:
       - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://security:security@postgres:5432/security
     depends_on: [postgres]
     networks: [core, edge]
 
