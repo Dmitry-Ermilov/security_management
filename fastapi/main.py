@@ -2,6 +2,7 @@ import os
 import uuid
 from datetime import datetime, UTC
 from typing import Any, Optional
+from collections.abc import Generator
 
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
@@ -100,7 +101,7 @@ class RthRequest(BaseModel):
 app = FastAPI(title="Security API")
 
 
-def get_db() -> Session:
+def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
